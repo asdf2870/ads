@@ -1,0 +1,913 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ads Studio</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/tabler-icons.min.css">
+<style>
+:root{--bg:#f5f4f0;--surface:#fff;--surface2:#efefeb;--border:rgba(0,0,0,.1);--border2:rgba(0,0,0,.18);--text:#1a1a18;--text2:#6b6b67;--text3:#9b9b97;--accent:#2563eb;--accent-bg:#eff4ff;--green:#16a34a;--green-bg:#f0fdf4;--amber:#b45309;--amber-bg:#fffbeb;--red:#dc2626;--red-bg:#fef2f2;--purple:#6d28d9;--purple-bg:#f5f0ff;--radius:8px;--radius-lg:12px}
+*{box-sizing:border-box;margin:0;padding:0}
+body{font-family:'DM Sans',sans-serif;background:var(--bg);color:var(--text);font-size:14px;min-height:100vh}
+
+/* Key Gate */
+#keyGate{min-height:100vh;display:flex;align-items:center;justify-content:center}
+.key-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:36px 40px;width:420px;max-width:95vw}
+.key-card .logo{font-family:'DM Mono',monospace;font-size:16px;font-weight:500;margin-bottom:4px}
+.key-card .sub{font-size:12px;color:var(--text3);margin-bottom:28px}
+.key-card label{font-size:12px;color:var(--text2);margin-bottom:6px;display:block}
+.key-card input{width:100%;font-size:13px;font-family:'DM Mono',monospace;padding:9px 12px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--text);outline:none;margin-bottom:10px}
+.key-card input:focus{border-color:var(--accent)}
+.key-card .hint{font-size:11px;color:var(--text3);line-height:1.6;margin-bottom:20px}
+.key-card .hint a{color:var(--accent);text-decoration:underline}
+.key-err{font-size:12px;color:var(--red);margin-bottom:10px;display:none}
+.remember-row{display:flex;align-items:center;gap:8px;margin-bottom:18px;font-size:12px;color:var(--text2)}
+.remember-row input[type=checkbox]{width:auto;margin:0}
+
+/* Layout */
+#appShell{display:none}
+.app{display:flex;min-height:100vh}
+.sidebar{width:220px;background:var(--surface);border-right:1px solid var(--border);display:flex;flex-direction:column;flex-shrink:0}
+.sidebar-logo{padding:20px 20px 16px;border-bottom:1px solid var(--border)}
+.logo-mark{font-family:'DM Mono',monospace;font-size:15px;font-weight:500;letter-spacing:-.02em}
+.logo-sub{font-size:11px;color:var(--text3);margin-top:2px}
+.sidebar-nav{padding:12px 10px;flex:1}
+.nav-item{display:flex;align-items:center;gap:9px;padding:8px 10px;border-radius:var(--radius);cursor:pointer;color:var(--text2);font-size:13px;margin-bottom:2px;transition:all .15s;border:none;background:none;width:100%;text-align:left}
+.nav-item:hover{background:var(--surface2);color:var(--text)}
+.nav-item.active{background:var(--text);color:#fff}
+.nav-item i{font-size:16px}
+.sidebar-clients{padding:10px;border-top:1px solid var(--border)}
+.sidebar-section-label{font-size:10px;font-weight:500;color:var(--text3);letter-spacing:.06em;text-transform:uppercase;padding:0 10px;margin-bottom:6px}
+.client-item{display:flex;align-items:center;gap:8px;padding:6px 10px;border-radius:var(--radius);cursor:pointer;font-size:12px;color:var(--text2);transition:all .15s;border:none;background:none;width:100%;text-align:left}
+.client-item:hover{background:var(--surface2);color:var(--text)}
+.client-item.active{color:var(--text);font-weight:500}
+.client-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0}
+.client-count{margin-left:auto;font-size:11px;color:var(--text3)}
+.main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.topbar{background:var(--surface);border-bottom:1px solid var(--border);padding:14px 28px;display:flex;align-items:center;justify-content:space-between;gap:12px}
+.topbar-left{display:flex;align-items:center;gap:10px}
+.page-title{font-size:15px;font-weight:500}
+.topbar-actions{display:flex;gap:8px;align-items:center}
+.content{flex:1;padding:28px;overflow-y:auto}
+.page{display:none}
+.page.active{display:block}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:7px 14px;border-radius:var(--radius);border:1px solid var(--border2);font-size:13px;cursor:pointer;background:var(--surface);color:var(--text);font-family:inherit;transition:all .15s}
+.btn:hover{background:var(--surface2)}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+.btn.primary{background:var(--text);color:#fff;border-color:var(--text)}
+.btn.primary:hover{opacity:.85}
+.btn.success{background:var(--green-bg);color:var(--green);border-color:rgba(22,163,74,.25)}
+.btn.danger{background:transparent;color:var(--red);border-color:rgba(220,38,38,.25)}
+.btn.ghost{background:transparent;border-color:transparent;color:var(--text2)}
+.btn.ghost:hover{background:var(--surface2)}
+.btn i{font-size:15px}
+
+/* Form */
+label{font-size:12px;color:var(--text2);margin-bottom:4px;display:block}
+input,select,textarea{width:100%;font-size:13px;font-family:inherit;padding:8px 10px;border-radius:var(--radius);border:1px solid var(--border2);background:var(--surface);color:var(--text);outline:none;transition:border .15s}
+input:focus,select:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.mb{margin-bottom:14px}
+.mb2{margin-bottom:20px}
+
+/* Stats */
+.stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:16px 18px}
+.stat-label{font-size:11px;color:var(--text3);margin-bottom:6px}
+.stat-value{font-size:24px;font-weight:300;font-family:'DM Mono',monospace}
+
+/* Tags */
+.tag-row{display:flex;flex-wrap:wrap;gap:6px;margin-top:4px}
+.tag{padding:4px 11px;border-radius:20px;border:1px solid var(--border2);font-size:12px;cursor:pointer;color:var(--text2);background:var(--surface);transition:all .15s}
+.tag.active{background:var(--text);color:#fff;border-color:var(--text)}
+
+/* Badges */
+.badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:500}
+.badge.testing{background:var(--accent-bg);color:var(--accent)}
+.badge.good{background:var(--green-bg);color:var(--green)}
+.badge.paused{background:var(--amber-bg);color:var(--amber)}
+.badge.stopped{background:var(--surface2);color:var(--text3)}
+.badge.new{background:var(--purple-bg);color:var(--purple)}
+.badge.replaced{background:#fff7ed;color:#c2410c}
+.type-badge{display:inline-block;padding:2px 8px;border-radius:4px;font-size:11px;background:var(--surface2);color:var(--text2);font-family:'DM Mono',monospace}
+
+/* Table */
+.table-wrap{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+table{width:100%;border-collapse:collapse;table-layout:fixed}
+th{padding:10px 12px;text-align:left;font-size:11px;font-weight:500;color:var(--text3);background:var(--surface2);border-bottom:1px solid var(--border);letter-spacing:.03em;text-transform:uppercase}
+td{padding:10px 12px;font-size:13px;border-bottom:1px solid var(--border);overflow:hidden;text-overflow:ellipsis;white-space:nowrap;vertical-align:middle}
+tr:last-child td{border-bottom:none}
+tr:hover td{background:var(--bg)}
+.row-actions{display:flex;gap:4px}
+
+/* Filter */
+.filter-bar{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap}
+.filter-bar input{flex:1;min-width:140px}
+.filter-bar select{width:auto}
+
+/* Generator */
+.versions-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:20px}
+.version-card{border:1px solid var(--border);border-radius:var(--radius-lg);overflow:hidden}
+.version-header{padding:12px 16px;background:var(--surface2);display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--border)}
+.version-label{font-size:13px;font-weight:500}
+.version-body{padding:14px 16px}
+.copy-row{display:flex;align-items:flex-start;gap:8px;padding:7px 0;border-bottom:1px solid var(--border)}
+.copy-row.selected{background:var(--green-bg)}
+.copy-row:last-of-type{border-bottom:none}
+.copy-type{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);min-width:24px;padding-top:3px;flex-shrink:0}
+.copy-text{font-size:12px;line-height:1.5;flex:1}
+.char-ok{font-size:10px;color:var(--green);white-space:nowrap;flex-shrink:0}
+.char-over{font-size:10px;color:var(--red);white-space:nowrap;flex-shrink:0}
+.icp-btn{background:none;border:none;cursor:pointer;color:var(--text3);font-size:15px;padding:0;line-height:1;flex-shrink:0;transition:color .15s}
+.icp-btn:hover{color:var(--text)}
+.check-box{width:15px;height:15px;border-radius:3px;border:1px solid var(--border2);cursor:pointer;flex-shrink:0;accent-color:var(--green);margin-top:2px}
+.preview-mini{background:var(--bg);border-radius:var(--radius);padding:10px 12px;margin-top:12px}
+.prev-url{font-size:11px;color:var(--green);margin-bottom:3px}
+.prev-title{font-size:13px;color:var(--accent);font-weight:500;line-height:1.4;margin-bottom:3px}
+.prev-desc{font-size:11px;color:var(--text2);line-height:1.5}
+.select-hint{font-size:11px;color:var(--text3);padding:8px 0 4px;display:flex;align-items:center;justify-content:space-between}
+
+/* RSA Detail Page */
+.back-btn{display:inline-flex;align-items:center;gap:6px;font-size:13px;color:var(--text2);cursor:pointer;border:none;background:none;padding:0;margin-bottom:20px;font-family:inherit}
+.back-btn:hover{color:var(--text)}
+.ad-meta{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:20px 24px;margin-bottom:20px}
+.ad-meta-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-top:14px}
+.ad-meta-item label{font-size:11px;color:var(--text3);margin-bottom:4px}
+.ad-meta-item .val{font-size:14px;font-weight:500;font-family:'DM Mono',monospace}
+.slots-section{margin-bottom:24px}
+.slots-title{font-size:13px;font-weight:500;color:var(--text2);margin-bottom:12px;display:flex;align-items:center;justify-content:space-between}
+.slot-list{display:flex;flex-direction:column;gap:8px}
+.slot-item{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.slot-item.has-history{border-color:var(--border2)}
+.slot-header{display:flex;align-items:center;gap:10px;padding:10px 14px}
+.slot-num{font-size:10px;font-family:'DM Mono',monospace;color:var(--text3);min-width:24px;flex-shrink:0}
+.slot-text{font-size:13px;flex:1;line-height:1.4}
+.slot-text.empty{color:var(--text3);font-style:italic}
+.slot-chars{font-size:10px;white-space:nowrap;flex-shrink:0}
+.slot-status{flex-shrink:0}
+.slot-actions{display:flex;gap:4px;flex-shrink:0}
+.slot-history{border-top:1px solid var(--border);background:var(--bg)}
+.slot-history-item{display:flex;align-items:flex-start;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border)}
+.slot-history-item:last-child{border-bottom:none}
+.history-text{font-size:12px;color:var(--text2);flex:1;line-height:1.4;text-decoration:line-through;opacity:.7}
+.history-meta{font-size:11px;color:var(--text3);white-space:nowrap;flex-shrink:0;text-align:right}
+.history-reason{font-size:11px;color:var(--amber);margin-top:2px}
+
+/* Spinner / empty */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border2);border-top-color:var(--text2);border-radius:50%;animation:spin .7s linear infinite;vertical-align:middle;margin-right:6px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-area{text-align:center;padding:3rem;color:var(--text2)}
+.empty{text-align:center;padding:2.5rem;color:var(--text3)}
+
+/* Modal */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.3);z-index:200;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border-radius:var(--radius-lg);border:1px solid var(--border);padding:24px;width:500px;max-width:95vw;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:15px;font-weight:500;margin-bottom:16px}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;right:24px;background:var(--text);color:#fff;border-radius:var(--radius);padding:9px 16px;font-size:13px;opacity:0;transition:opacity .2s;pointer-events:none;z-index:999}
+.toast.show{opacity:1}
+
+/* Key indicator */
+.key-indicator{display:flex;align-items:center;gap:6px;font-size:11px;color:var(--text3);font-family:'DM Mono',monospace}
+.key-dot{width:6px;height:6px;border-radius:50%;background:var(--green)}
+
+::-webkit-scrollbar{width:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--border2);border-radius:3px}
+</style>
+</head>
+<body>
+
+<!-- Key Gate -->
+<div id="keyGate">
+  <div class="key-card">
+    <div class="logo">Ads Studio</div>
+    <div class="sub">廣告素材管理工具</div>
+    <label>OpenRouter API Key</label>
+    <input type="password" id="keyInput" placeholder="sk-or-v1-..." autocomplete="off" onkeydown="if(event.key==='Enter')submitKey()">
+    <div class="key-err" id="keyErr">API Key 格式不正確（應以 sk-or 開頭）</div>
+    <div class="remember-row">
+      <input type="checkbox" id="rememberKey" checked>
+      <label for="rememberKey" style="margin:0;cursor:pointer">記住 Key（存在此瀏覽器，下次免輸入）</label>
+    </div>
+    <div class="hint">在 <a href="https://openrouter.ai/keys" target="_blank">openrouter.ai</a> 免費取得 API Key。<br>Key 不會上傳至任何伺服器，僅在你的瀏覽器中使用。</div>
+    <button class="btn primary" style="width:100%;justify-content:center" onclick="submitKey()"><i class="ti ti-arrow-right"></i> 進入</button>
+  </div>
+</div>
+
+<!-- App -->
+<div id="appShell">
+<div class="app">
+  <aside class="sidebar">
+    <div class="sidebar-logo">
+      <div class="logo-mark">Ads Studio</div>
+      <div class="logo-sub">廣告素材管理</div>
+    </div>
+    <nav class="sidebar-nav">
+      <button class="nav-item active" onclick="switchPage('gen',this)"><i class="ti ti-bolt"></i> 文案產生器</button>
+      <button class="nav-item" onclick="switchPage('dash',this)"><i class="ti ti-layout-dashboard"></i> 素材儀表板</button>
+    </nav>
+    <div class="sidebar-clients">
+      <div class="sidebar-section-label">客戶</div>
+      <div id="sidebarClients"></div>
+    </div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="topbar-left">
+        <span class="page-title" id="pageTitle">文案產生器</span>
+      </div>
+      <div class="topbar-actions" id="topbarActions"></div>
+    </div>
+    <div class="content">
+
+      <!-- Generator -->
+      <div id="page-gen" class="page active">
+        <div class="grid2 mb2">
+          <div class="mb"><label>產品 / 服務名稱</label><input type="text" id="g-product" placeholder="e.g. 線上英語課程"></div>
+          <div class="mb"><label>目標網址（顯示用）</label><input type="text" id="g-url" placeholder="e.g. example.com/promo"></div>
+        </div>
+        <div class="mb2"><label>主要賣點（每行一個，至少填 2 項）</label><textarea id="g-usp" rows="3" placeholder="免費試用 14 天&#10;比競品便宜 30%&#10;24 小時客服支援"></textarea></div>
+        <div class="grid3 mb2">
+          <div><label>目標受眾</label><input type="text" id="g-audience" placeholder="e.g. 中小企業主"></div>
+          <div><label>廣告目標</label>
+            <select id="g-goal"><option value="轉換">轉換（購買/填單）</option><option value="流量">網站流量</option><option value="品牌">品牌知名度</option><option value="再行銷">再行銷</option></select>
+          </div>
+          <div><label>歸屬客戶</label><select id="g-client"></select></div>
+        </div>
+        <div class="mb2">
+          <label>語氣風格（可多選）</label>
+          <div class="tag-row" id="toneRow">
+            <span class="tag active" onclick="toggleTag(this)">專業</span>
+            <span class="tag active" onclick="toggleTag(this)">急迫感</span>
+            <span class="tag" onclick="toggleTag(this)">親切</span>
+            <span class="tag" onclick="toggleTag(this)">數字導向</span>
+            <span class="tag" onclick="toggleTag(this)">問句開頭</span>
+            <span class="tag" onclick="toggleTag(this)">直接促銷</span>
+            <span class="tag" onclick="toggleTag(this)">情感訴求</span>
+          </div>
+        </div>
+        <div class="mb2"><label>關鍵字（選填，逗號分隔）</label><input type="text" id="g-kw" placeholder="e.g. 線上學英文, 英語補習"></div>
+        <div style="display:flex;align-items:center;gap:12px">
+          <button class="btn primary" id="genBtn" onclick="generate()"><i class="ti ti-bolt"></i> 產生兩組文案</button>
+          <span style="font-size:12px;color:var(--text3)">AI 產生 A / B 兩組，每組 10 標題 + 5 描述</span>
+        </div>
+        <div id="versionsArea"></div>
+      </div>
+
+      <!-- Dashboard List -->
+      <div id="page-dash" class="page">
+        <div class="grid4 mb2" id="statsRow"></div>
+        <div class="filter-bar">
+          <input type="text" id="d-search" placeholder="搜尋廣告名稱…" oninput="renderDash()">
+          <select id="d-status" onchange="renderDash()">
+            <option value="">所有狀態</option>
+            <option>新素材</option><option>測試中</option><option>表現良好</option><option>已暫停</option><option>已停止</option>
+          </select>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr>
+              <th style="width:26%">廣告名稱</th>
+              <th style="width:12%">客戶</th>
+              <th style="width:13%">活動</th>
+              <th style="width:8%">標題數</th>
+              <th style="width:10%">狀態</th>
+              <th style="width:14%">動作</th>
+            </tr></thead>
+            <tbody id="dashBody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- RSA Detail -->
+      <div id="page-detail" class="page">
+        <button class="back-btn" onclick="switchPage('dash',null,true)"><i class="ti ti-arrow-left"></i> 返回列表</button>
+        <div id="detailContent"></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Modal: 新增/編輯廣告 -->
+<div class="modal-overlay" id="adModal" onclick="if(event.target===this)closeModal('adModal')">
+  <div class="modal">
+    <div class="modal-title" id="adModalTitle">新增廣告</div>
+    <div class="grid2">
+      <div class="mb"><label>廣告名稱</label><input type="text" id="am-name" placeholder="e.g. 品牌_夏季促銷"></div>
+      <div class="mb"><label>客戶</label><select id="am-client"></select></div>
+      <div class="mb"><label>活動名稱</label><input type="text" id="am-campaign"></div>
+      <div class="mb"><label>狀態</label>
+        <select id="am-status"><option>新素材</option><option>測試中</option><option>表現良好</option><option>已暫停</option><option>已停止</option></select>
+      </div>
+      <div class="mb"><label>上線日期</label><input type="date" id="am-date"></div>
+    </div>
+    <div class="mb"><label>備註</label><textarea id="am-note" rows="2"></textarea></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('adModal')">取消</button>
+      <button class="btn primary" onclick="saveAd()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 編輯單一 slot -->
+<div class="modal-overlay" id="slotModal" onclick="if(event.target===this)closeModal('slotModal')">
+  <div class="modal" style="width:480px">
+    <div class="modal-title" id="slotModalTitle">編輯標題</div>
+    <div class="mb"><label>內容</label><input type="text" id="sm-text" placeholder="輸入新標題或描述"></div>
+    <div id="sm-charcount" style="font-size:11px;color:var(--text3);margin-top:-10px;margin-bottom:14px"></div>
+    <div class="grid2 mb">
+      <div><label>CTR (%)</label><input type="number" id="sm-ctr" step="0.1" placeholder="e.g. 3.5"></div>
+      <div><label>轉換數</label><input type="number" id="sm-conv" step="1" placeholder="e.g. 12"></div>
+    </div>
+    <div class="mb"><label>備註（選填）</label><textarea id="sm-note" rows="1" placeholder="e.g. 主打情感訴求，高轉換率"></textarea></div>
+    <div id="sm-replace-section">
+      <div class="mb"><label>替換原因（替換時填）</label>
+        <select id="sm-reason">
+          <option value="">選擇原因</option>
+          <option>CTR 偏低</option>
+          <option>CPA 偏高</option>
+          <option>轉換率低</option>
+          <option>廣告審核不通過</option>
+          <option>季節性調整</option>
+          <option>策略調整</option>
+          <option>其他</option>
+        </select>
+      </div>
+      <div class="mb"><label>補充說明（選填）</label><textarea id="sm-reason-note" rows="1" placeholder="e.g. CTR 只有 0.8%，低於平均值"></textarea></div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('slotModal')">取消</button>
+      <button class="btn primary" onclick="saveSlot()">儲存</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: 儲存至儀表板 -->
+<div class="modal-overlay" id="saveModal" onclick="if(event.target===this)closeModal('saveModal')">
+  <div class="modal" style="width:460px">
+    <div class="modal-title">儲存至儀表板</div>
+    <div class="mb"><label>廣告名稱</label><input type="text" id="sv-name"></div>
+    <div class="grid2 mb">
+      <div><label>客戶</label><select id="sv-client"></select></div>
+      <div><label>活動名稱</label><input type="text" id="sv-campaign"></div>
+    </div>
+    <div style="font-size:12px;color:var(--text2);margin-bottom:8px">已勾選的標題 / 描述將作為初始版本存入</div>
+    <div id="sv-preview" style="background:var(--bg);border-radius:var(--radius);padding:12px;font-size:12px;color:var(--text2);max-height:160px;overflow-y:auto;margin-bottom:4px"></div>
+    <div class="modal-actions">
+      <button class="btn" onclick="closeModal('saveModal')">取消</button>
+      <button class="btn primary" onclick="confirmSave()">存入儀表板</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const CLIENTS=[{id:'c1',name:'客戶 A',color:'#2563eb'},{id:'c2',name:'客戶 B',color:'#16a34a'},{id:'c3',name:'客戶 C',color:'#dc2626'},{id:'c4',name:'客戶 D',color:'#7c3aed'},{id:'c5',name:'客戶 E',color:'#db2777'},{id:'c6',name:'客戶 F',color:'#d97706'}];
+const statusClass={測試中:'testing',表現良好:'good',已暫停:'paused',已停止:'stopped',新素材:'new'};
+let API_KEY='';
+let nextId=100;
+let editAdId=null;
+let activeClient='all';
+let currentDetailId=null;
+let slotContext=null; // {adId, slotType:'h'|'d', slotIndex}
+let pendingSave=null; // {versionKey, parsed, clientId}
+
+// ---- Data ----
+let ads=JSON.parse(localStorage.getItem('ads_v2')||'null')||[
+  {id:1,client:'c1',name:'品牌形象_夏季',campaign:'Brand-2025',status:'表現良好',date:'2025-05-01',note:'',
+   headlines:[
+     {text:'夏季限定優惠，立即搶購',ctr:4.8,conv:23,note:'',history:[]},
+     {text:'專業品質，價格實惠',ctr:3.2,conv:15,note:'',history:[{text:'超值好物，今日特賣',ctr:1.1,conv:3,replacedAt:'2025-04-10',reason:'CTR 偏低',note:'CTR 只有 1.1%'}]},
+     {text:'免費試用 14 天',ctr:5.1,conv:31,note:'轉換率最高',history:[]},
+     {text:'立即開始，輕鬆上手',ctr:2.9,conv:11,note:'',history:[]},
+     {text:'千人好評，值得信賴',ctr:3.6,conv:18,note:'',history:[]},
+   ],
+   descriptions:[
+     {text:'提供最優質的產品與服務，讓您的生活更便利。立即了解更多，享受專屬優惠。',ctr:null,conv:null,note:'',history:[]},
+     {text:'超過千位用戶的信賴之選。免費試用 14 天，不滿意全額退款。',ctr:null,conv:null,note:'',history:[]},
+   ]
+  }
+];
+
+function saveData(){localStorage.setItem('ads_v2',JSON.stringify(ads))}
+function clientName(id){return(CLIENTS.find(c=>c.id===id)||{}).name||id}
+function showToast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1800)}
+function closeModal(id){document.getElementById(id).classList.remove('open');if(id==='slotModal')slotContext=null}
+
+// ---- Key Gate ----
+function submitKey(){
+  const val=document.getElementById('keyInput').value.trim();
+  const err=document.getElementById('keyErr');
+  if(!val.startsWith('sk-or')){err.style.display='block';return}
+  err.style.display='none';
+  API_KEY=val;
+  if(document.getElementById('rememberKey').checked)localStorage.setItem('ads_or_key',val);
+  launchApp();
+}
+function launchApp(){
+  document.getElementById('keyGate').style.display='none';
+  document.getElementById('appShell').style.display='block';
+  initSelects();buildSidebar();renderDash();updateTopbar('gen');
+}
+function logout(){
+  if(!confirm('清除 API Key？'))return;
+  localStorage.removeItem('ads_or_key');API_KEY='';
+  document.getElementById('keyInput').value='';
+  document.getElementById('appShell').style.display='none';
+  document.getElementById('keyGate').style.display='flex';
+}
+window.addEventListener('DOMContentLoaded',()=>{
+  const saved=localStorage.getItem('ads_or_key');
+  if(saved&&saved.startsWith('sk-or')){API_KEY=saved;document.getElementById('keyInput').value=saved;launchApp()}
+});
+
+// ---- Navigation ----
+function switchPage(p,btn,skipNavUpdate){
+  document.querySelectorAll('.page').forEach(el=>el.classList.remove('active'));
+  document.getElementById('page-'+p).classList.add('active');
+  if(!skipNavUpdate){
+    document.querySelectorAll('.nav-item').forEach(el=>el.classList.remove('active'));
+    if(btn)btn.classList.add('active');
+    else{
+      const map={gen:0,dash:1};
+      if(map[p]!==undefined)document.querySelectorAll('.nav-item')[map[p]].classList.add('active');
+    }
+  }
+  const titles={gen:'文案產生器',dash:'素材儀表板',detail:'廣告詳細'};
+  document.getElementById('pageTitle').textContent=titles[p]||'';
+  updateTopbar(p);
+  if(p==='dash')renderDash();
+}
+function updateTopbar(p){
+  const ki=`<div class="key-indicator"><span class="key-dot"></span><span>${API_KEY.slice(0,10)}…${API_KEY.slice(-4)}</span><button class="btn ghost" style="padding:3px 8px;font-size:11px" onclick="logout()"><i class="ti ti-logout"></i></button></div>`;
+  const actions=document.getElementById('topbarActions');
+  if(p==='dash')actions.innerHTML=`<button class="btn" onclick="exportCSV()"><i class="ti ti-download"></i> 匯出</button><button class="btn primary" onclick="openAdModal()"><i class="ti ti-plus"></i> 手動新增</button>${ki}`;
+  else actions.innerHTML=ki;
+}
+
+function toggleTag(el){el.classList.toggle('active')}
+function getActiveTones(){return[...document.querySelectorAll('#toneRow .tag.active')].map(t=>t.textContent)}
+
+function initSelects(){
+  const opts=CLIENTS.map(c=>`<option value="${c.id}">${c.name}</option>`).join('');
+  ['g-client','am-client','sv-client'].forEach(id=>{const el=document.getElementById(id);if(el)el.innerHTML=opts});
+}
+function buildSidebar(){
+  const el=document.getElementById('sidebarClients');
+  let h=`<button class="client-item ${activeClient==='all'?'active':''}" onclick="setClient('all')"><span class="client-dot" style="background:#888"></span>全部客戶<span class="client-count">${ads.length}</span></button>`;
+  CLIENTS.forEach(c=>{
+    const n=ads.filter(d=>d.client===c.id).length;
+    h+=`<button class="client-item ${activeClient===c.id?'active':''}" onclick="setClient('${c.id}')"><span class="client-dot" style="background:${c.color}"></span>${c.name}<span class="client-count">${n}</span></button>`;
+  });
+  el.innerHTML=h;
+}
+function setClient(id){activeClient=id;buildSidebar();renderDash()}
+
+// ---- Dashboard ----
+function getFiltered(){
+  const q=(document.getElementById('d-search')||{value:''}).value.toLowerCase();
+  const s=(document.getElementById('d-status')||{value:''}).value;
+  return ads.filter(d=>{
+    if(activeClient!=='all'&&d.client!==activeClient)return false;
+    if(q&&!d.name.toLowerCase().includes(q))return false;
+    if(s&&d.status!==s)return false;
+    return true;
+  });
+}
+function renderDash(){
+  buildSidebar();
+  const f=getFiltered();
+  const good=f.filter(d=>d.status==='表現良好').length;
+  const testing=f.filter(d=>d.status==='測試中').length;
+  const allSlotCtrs=f.flatMap(d=>(d.headlines||[]).filter(h=>h.ctr!=null).map(h=>h.ctr));
+  const avgSlotCtr=allSlotCtrs.length?allSlotCtrs.reduce((a,b)=>a+b,0)/allSlotCtrs.length:null;
+  const totalSlots=f.reduce((a,d)=>a+(d.headlines||[]).length+(d.descriptions||[]).length,0);
+  document.getElementById('statsRow').innerHTML=`
+    <div class="stat-card"><div class="stat-label">廣告總數</div><div class="stat-value">${f.length}</div></div>
+    <div class="stat-card"><div class="stat-label">素材總數</div><div class="stat-value">${totalSlots}</div></div>
+    <div class="stat-card"><div class="stat-label">表現良好</div><div class="stat-value">${good}</div></div>
+    <div class="stat-card"><div class="stat-label">平均標題 CTR</div><div class="stat-value">${avgSlotCtr!=null?avgSlotCtr.toFixed(1)+'%':'—'}</div></div>`;
+  const tb=document.getElementById('dashBody');
+  if(!f.length){tb.innerHTML=`<tr><td colspan="8"><div class="empty"><i class="ti ti-clipboard-x" style="font-size:24px;display:block;margin-bottom:8px"></i>尚無廣告</div></td></tr>`;return}
+  tb.innerHTML=f.map(d=>`<tr>
+    <td title="${d.name}" style="cursor:pointer;color:var(--accent)" onclick="openDetail(${d.id})">${d.name}</td>
+    <td>${clientName(d.client)}</td>
+    <td title="${d.campaign||''}">${d.campaign||'—'}</td>
+    <td>${d.headlines?d.headlines.length:0}</td>
+    <td><span class="badge ${statusClass[d.status]||''}">${d.status}</span></td>
+    <td><div class="row-actions">
+      <button class="btn" style="padding:4px 8px;font-size:12px" onclick="openDetail(${d.id})"><i class="ti ti-eye"></i></button>
+      <button class="btn" style="padding:4px 8px;font-size:12px" onclick="openAdModal(${d.id})"><i class="ti ti-edit"></i></button>
+      <button class="btn" style="padding:4px 8px;font-size:12px" onclick="deleteAd(${d.id})"><i class="ti ti-trash"></i></button>
+    </div></td>
+  </tr>`).join('');
+}
+
+// ---- Detail Page ----
+function openDetail(id){
+  currentDetailId=id;
+  switchPage('detail',null,true);
+  renderDetail();
+}
+function renderDetail(){
+  const ad=ads.find(a=>a.id===currentDetailId);
+  if(!ad)return;
+  const totalReplaced=(ad.headlines||[]).reduce((a,h)=>a+h.history.length,0)+(ad.descriptions||[]).reduce((a,d)=>a+d.history.length,0);
+  const allH=(ad.headlines||[]).filter(h=>h.text&&h.ctr!=null);
+  const bestCtrSlot=allH.length?allH.reduce((a,b)=>b.ctr>a.ctr?b:a).text.slice(0,12)+'…':'—';
+  const allConv=(ad.headlines||[]).filter(h=>h.text&&h.conv!=null);
+  const bestConvSlot=allConv.length?allConv.reduce((a,b)=>b.conv>a.conv?b:a).text.slice(0,12)+'…':'—';
+  document.getElementById('detailContent').innerHTML=`
+    <div class="ad-meta">
+      <div style="display:flex;align-items:center;justify-content:space-between">
+        <div>
+          <div style="font-size:16px;font-weight:500">${ad.name}</div>
+          <div style="font-size:12px;color:var(--text3);margin-top:3px">${clientName(ad.client)}${ad.campaign?' · '+ad.campaign:''}</div>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center">
+          <span class="badge ${statusClass[ad.status]||''}">${ad.status}</span>
+          <button class="btn" onclick="openAdModal(${ad.id})"><i class="ti ti-edit"></i> 編輯資訊</button>
+        </div>
+      </div>
+      <div class="ad-meta-grid">
+        <div class="ad-meta-item"><label>上線日期</label><div class="val" style="font-size:13px">${ad.date||'—'}</div></div>
+        <div class="ad-meta-item"><label>已替換素材</label><div class="val">${totalReplaced} 條</div></div>
+        <div class="ad-meta-item"><label>最高 CTR 標題</label><div class="val">${bestCtrSlot}</div></div>
+        <div class="ad-meta-item"><label>最高轉換標題</label><div class="val">${bestConvSlot}</div></div>
+      </div>
+      ${ad.note?`<div style="font-size:12px;color:var(--text2);margin-top:12px;padding-top:12px;border-top:1px solid var(--border)">${ad.note}</div>`:''}
+    </div>
+    <div class="slots-section">
+      <div class="slots-title">
+        <span>標題 <span style="font-weight:300;color:var(--text3)">${(ad.headlines||[]).length}/15</span></span>
+        <button class="btn" style="font-size:12px;padding:5px 10px" onclick="addSlot(${ad.id},'h')"><i class="ti ti-plus"></i> 新增標題</button>
+      </div>
+      <div class="slot-list" id="headline-slots">
+        ${(ad.headlines||[]).map((h,i)=>renderSlot(ad.id,'h',i,h)).join('')}
+        ${(ad.headlines||[]).length===0?'<div class="empty" style="padding:1rem">尚無標題，點右上角新增</div>':''}
+      </div>
+    </div>
+    <div class="slots-section">
+      <div class="slots-title">
+        <span>描述 <span style="font-weight:300;color:var(--text3)">${(ad.descriptions||[]).length}/4</span></span>
+        <button class="btn" style="font-size:12px;padding:5px 10px" onclick="addSlot(${ad.id},'d')"><i class="ti ti-plus"></i> 新增描述</button>
+      </div>
+      <div class="slot-list" id="desc-slots">
+        ${(ad.descriptions||[]).map((d,i)=>renderSlot(ad.id,'d',i,d)).join('')}
+        ${(ad.descriptions||[]).length===0?'<div class="empty" style="padding:1rem">尚無描述，點右上角新增</div>':''}
+      </div>
+    </div>`;
+}
+
+function renderSlot(adId,type,index,slot){
+  const max=type==='h'?30:90;
+  const len=(slot.text||'').length;
+  const charClass=len===0?'':len<=max?'char-ok':'char-over';
+  const hasHistory=slot.history&&slot.history.length>0;
+  const ctrBadge=slot.ctr!=null?`<span style="font-size:10px;background:var(--accent-bg);color:var(--accent);padding:1px 6px;border-radius:3px;margin-right:4px">CTR ${slot.ctr.toFixed(1)}%</span>`:'';
+  const convBadge=slot.conv!=null?`<span style="font-size:10px;background:var(--green-bg);color:var(--green);padding:1px 6px;border-radius:3px;margin-right:4px">${slot.conv} 轉換</span>`:'';
+  const noteBadge=slot.note?`<span style="font-size:10px;color:var(--text3);margin-right:4px" title="${slot.note}"><i class="ti ti-message"></i></span>`:'';
+  const historyHtml=hasHistory?`
+    <div class="slot-history">
+      ${slot.history.map(h=>`
+        <div class="slot-history-item">
+          <div style="flex:1">
+            <div class="history-text">${h.text}</div>
+            <div style="margin-top:2px">
+              ${h.ctr!=null?`<span style="font-size:10px;background:var(--surface2);padding:1px 5px;border-radius:3px;margin-right:4px">CTR ${h.ctr.toFixed(1)}%</span>`:''}
+              ${h.conv!=null?`<span style="font-size:10px;background:var(--surface2);padding:1px 5px;border-radius:3px;margin-right:4px">${h.conv} 轉換</span>`:''}
+            </div>
+            ${h.reason?`<div class="history-reason"><i class="ti ti-arrow-right" style="font-size:10px"></i> ${h.reason}${h.note?' — '+h.note:''}</div>`:''}
+          </div>
+          <div class="history-meta">${h.replacedAt||''}</div>
+        </div>`).join('')}
+    </div>`:'';
+  return `<div class="slot-item ${hasHistory?'has-history':''}">
+    <div class="slot-header">
+      <span class="slot-num">${type==='h'?'H':'D'}${index+1}</span>
+      <div style="flex:1;min-width:0">
+        <div class="slot-text ${slot.text?'':'empty'}">${slot.text||'（空）'}</div>
+        <div style="margin-top:4px">${ctrBadge}${convBadge}${noteBadge}${slot.text?`<span class="${charClass}" style="font-size:10px">${len}/${max}字</span>`:''}</div>
+      </div>
+      <div class="slot-actions">
+        <button class="btn ghost" style="padding:3px 7px;font-size:12px" onclick="openSlotModal(${adId},'${type}',${index})" title="替換"><i class="ti ti-edit"></i></button>
+        <button class="btn ghost" style="padding:3px 7px;font-size:12px;color:var(--red)" onclick="removeSlot(${adId},'${type}',${index})" title="移除"><i class="ti ti-trash"></i></button>
+        ${hasHistory?`<button class="btn ghost" style="padding:3px 7px;font-size:12px" onclick="toggleHistory(this)" title="歷史"><i class="ti ti-history"></i> ${slot.history.length}</button>`:''}
+      </div>
+    </div>
+    ${historyHtml}
+  </div>`;
+}
+
+function toggleHistory(btn){
+  const slotItem=btn.closest('.slot-item');
+  const hist=slotItem.querySelector('.slot-history');
+  if(hist)hist.style.display=hist.style.display==='none'?'block':'none';
+}
+
+function addSlot(adId,type){
+  const ad=ads.find(a=>a.id===adId);
+  if(!ad)return;
+  const maxSlots=type==='h'?15:4;
+  const arr=type==='h'?ad.headlines:ad.descriptions;
+  if(arr.length>=maxSlots){showToast(`最多 ${maxSlots} 個${type==='h'?'標題':'描述'}`);return}
+  slotContext={adId,slotType:type,slotIndex:arr.length,isNew:true};
+  document.getElementById('slotModalTitle').textContent=type==='h'?'新增標題':'新增描述';
+  document.getElementById('sm-text').value='';
+  document.getElementById('sm-ctr').value='';
+  document.getElementById('sm-conv').value='';
+  document.getElementById('sm-note').value='';
+  document.getElementById('sm-reason').value='';
+  document.getElementById('sm-reason-note').value='';
+  document.getElementById('sm-charcount').textContent='';
+  document.getElementById('sm-text').oninput=()=>{
+    const l=document.getElementById('sm-text').value.length;
+    const max=type==='h'?30:90;
+    document.getElementById('sm-charcount').textContent=`${l}/${max}字元`;
+    document.getElementById('sm-charcount').style.color=l<=max?'var(--text3)':'var(--red)';
+  };
+  document.getElementById('slotModal').classList.add('open');
+}
+
+function openSlotModal(adId,type,index){
+  const ad=ads.find(a=>a.id===adId);
+  if(!ad)return;
+  const slot=(type==='h'?ad.headlines:ad.descriptions)[index];
+  slotContext={adId,slotType:type,slotIndex:index,isNew:false};
+  document.getElementById('slotModalTitle').textContent=type==='h'?'編輯標題':'編輯描述';
+  document.getElementById('sm-text').value=slot.text||'';
+  document.getElementById('sm-ctr').value=slot.ctr!=null?slot.ctr:'';
+  document.getElementById('sm-conv').value=slot.conv!=null?slot.conv:'';
+  document.getElementById('sm-note').value=slot.note||'';
+  document.getElementById('sm-reason').value='';
+  document.getElementById('sm-reason-note').value='';
+  const max=type==='h'?30:90;
+  const l=(slot.text||'').length;
+  document.getElementById('sm-charcount').textContent=`${l}/${max}字元`;
+  document.getElementById('sm-charcount').style.color=l<=max?'var(--text3)':'var(--red)';
+  document.getElementById('sm-text').oninput=()=>{
+    const nl=document.getElementById('sm-text').value.length;
+    document.getElementById('sm-charcount').textContent=`${nl}/${max}字元`;
+    document.getElementById('sm-charcount').style.color=nl<=max?'var(--text3)':'var(--red)';
+  };
+  document.getElementById('slotModal').classList.add('open');
+}
+
+function saveSlot(){
+  if(!slotContext)return;
+  const {adId,slotType,slotIndex,isNew}=slotContext;
+  const ad=ads.find(a=>a.id===adId);
+  if(!ad)return;
+  const newText=document.getElementById('sm-text').value.trim();
+  if(!newText){alert('請填寫內容');return}
+  const reason=document.getElementById('sm-reason').value;
+  const reasonNote=document.getElementById('sm-reason-note').value.trim();
+  const note=document.getElementById('sm-note').value.trim();
+  const ctr=parseFloat(document.getElementById('sm-ctr').value)||null;
+  const conv=parseFloat(document.getElementById('sm-conv').value)||null;
+  const arr=slotType==='h'?ad.headlines:ad.descriptions;
+  if(isNew){
+    arr.push({text:newText,ctr,conv,note,history:[]});
+  } else {
+    const oldSlot=arr[slotIndex];
+    const textChanged=oldSlot.text!==newText;
+    if(textChanged&&oldSlot.text){
+      // archive old version with its performance data
+      arr[slotIndex].history.unshift({
+        text:oldSlot.text,ctr:oldSlot.ctr,conv:oldSlot.conv,note:oldSlot.note,
+        replacedAt:new Date().toISOString().slice(0,10),reason,note:reasonNote
+      });
+      arr[slotIndex].text=newText;
+      arr[slotIndex].ctr=ctr;arr[slotIndex].conv=conv;arr[slotIndex].note=note;
+    } else {
+      // just update metrics/note, no replacement
+      arr[slotIndex].ctr=ctr;arr[slotIndex].conv=conv;arr[slotIndex].note=note;
+    }
+  }
+  saveData();closeModal('slotModal');renderDetail();showToast(isNew?'已新增':'已儲存');
+}
+
+function removeSlot(adId,type,index){
+  if(!confirm('確定移除此素材？（歷史記錄也會一併刪除）'))return;
+  const ad=ads.find(a=>a.id===adId);
+  if(!ad)return;
+  const arr=type==='h'?ad.headlines:ad.descriptions;
+  arr.splice(index,1);
+  saveData();renderDetail();showToast('已移除');
+}
+
+// ---- Ad CRUD ----
+function openAdModal(id){
+  editAdId=id||null;
+  document.getElementById('adModalTitle').textContent=id?'編輯廣告資訊':'新增廣告';
+  if(id){
+    const d=ads.find(a=>a.id===id);
+    document.getElementById('am-name').value=d.name;
+    document.getElementById('am-client').value=d.client;
+    document.getElementById('am-campaign').value=d.campaign||'';
+    document.getElementById('am-status').value=d.status;
+    document.getElementById('am-date').value=d.date||'';
+    document.getElementById('am-note').value=d.note||'';
+  } else {
+    ['am-name','am-campaign','am-note'].forEach(i=>document.getElementById(i).value='');
+    document.getElementById('am-date').value=new Date().toISOString().slice(0,10);
+  }
+  document.getElementById('adModal').classList.add('open');
+}
+function saveAd(){
+  const name=document.getElementById('am-name').value.trim();
+  if(!name){alert('請填廣告名稱');return}
+  const obj={
+    id:editAdId||nextId++,
+    client:document.getElementById('am-client').value,
+    name,campaign:document.getElementById('am-campaign').value,
+    status:document.getElementById('am-status').value,
+    date:document.getElementById('am-date').value,
+    note:document.getElementById('am-note').value,
+    headlines:editAdId?(ads.find(a=>a.id===editAdId)||{headlines:[]}).headlines:[],
+    descriptions:editAdId?(ads.find(a=>a.id===editAdId)||{descriptions:[]}).descriptions:[],
+  };
+  if(editAdId)ads=ads.map(a=>a.id===editAdId?obj:a);
+  else ads.push(obj);
+  saveData();closeModal('adModal');
+  if(currentDetailId===editAdId)renderDetail();
+  else renderDash();
+  showToast('已儲存');
+}
+function deleteAd(id){
+  if(!confirm('確定刪除此廣告？'))return;
+  ads=ads.filter(a=>a.id!==id);
+  saveData();renderDash();showToast('已刪除');
+}
+
+// ---- Generator ----
+async function generate(){
+  const product=document.getElementById('g-product').value.trim();
+  const usp=document.getElementById('g-usp').value.trim();
+  if(!product||!usp){alert('請填寫產品名稱和主要賣點');return}
+  const url=document.getElementById('g-url').value.trim()||'example.com';
+  const audience=document.getElementById('g-audience').value.trim();
+  const goal=document.getElementById('g-goal').value;
+  const kw=document.getElementById('g-kw').value.trim();
+  const clientId=document.getElementById('g-client').value;
+  const tones=getActiveTones();
+  const half=Math.ceil(tones.length/2);
+  const halfA=tones.slice(0,half).join('、')||'專業';
+  const halfB=tones.slice(half).join('、')||'親切、急迫感';
+  const btn=document.getElementById('genBtn');
+  btn.disabled=true;
+  document.getElementById('versionsArea').innerHTML=`<div class="loading-area"><span class="spinner"></span>AI 正在產生 A / B 兩組文案…</div>`;
+  const prompt=`你是 Google Ads 文案專家，請用繁體中文產生兩組風格不同的廣告文案。
+產品/服務：${product}
+主要賣點：${usp}
+目標受眾：${audience||'一般大眾'}
+廣告目標：${goal}
+版本A語氣：${halfA}
+版本B語氣：${halfB}
+${kw?'關鍵字：'+kw:''}
+請嚴格只回傳 JSON，不要有任何其他文字或 markdown：
+{"versionA":{"label":"${halfA}版","headlines":["","","","","","","","","",""],"descriptions":["","","","",""],"paths":["",""]},"versionB":{"label":"${halfB}版","headlines":["","","","","","","","","",""],"descriptions":["","","","",""],"paths":["",""]}}
+規則：headlines 需有10個，每個≤30字元；descriptions 需有5個，每個≤90字元；paths 每個≤15字元無空格；兩版風格須明顯不同；標題要多樣化涵蓋不同角度。`;
+  try{
+    const res=await fetch('https://openrouter.ai/api/v1/chat/completions',{
+      method:'POST',
+      headers:{'Content-Type':'application/json','Authorization':`Bearer ${API_KEY}`,'HTTP-Referer':window.location.href,'X-Title':'Ads Studio'},
+      body:JSON.stringify({model:'openrouter/free',max_tokens:2500,messages:[{role:'user',content:prompt}]})
+    });
+    const data=await res.json();
+    if(data.error)throw new Error(data.error.message);
+    const raw=data.choices?.[0]?.message?.content||'';
+    let cleaned=raw.replace(/```json|```/g,'').trim();
+    const jsonMatch=cleaned.match(/\{[\s\S]*\}/);
+    if(!jsonMatch)throw new Error('AI 回傳格式錯誤，請再試一次');
+    cleaned=jsonMatch[0];
+    let parsed;
+    try{parsed=JSON.parse(cleaned)}
+    catch(e1){cleaned=cleaned.replace(/,\s*([}\]])/g,'$1');parsed=JSON.parse(cleaned)}
+    renderVersions(parsed,url,clientId);
+  }catch(e){
+    document.getElementById('versionsArea').innerHTML=`<div class="loading-area" style="color:var(--red)"><i class="ti ti-alert-circle" style="font-size:22px;display:block;margin-bottom:8px"></i>產生失敗：${e.message||'請再試一次'}</div>`;
+  }
+  btn.disabled=false;
+}
+
+function renderVersions(parsed,url,clientId){
+  window._genResult={parsed,url,clientId};
+  const area=document.getElementById('versionsArea');
+  area.innerHTML=`<div style="font-size:12px;color:var(--text3);margin:20px 0 12px">產生完成 — 勾選要上線的標題和描述，再點「存入儀表板」</div><div class="versions-grid" id="vgrid"></div>`;
+  ['versionA','versionB'].forEach((key,vi)=>{
+    const v=parsed[key];
+    const card=document.createElement('div');
+    card.className='version-card';
+    let rows='';
+    v.headlines.forEach((h,j)=>{
+      const l=h.length;
+      rows+=`<div class="copy-row" id="row-${key}-h-${j}">
+        <input type="checkbox" class="check-box" id="chk-${key}-h-${j}" checked onchange="updateSaveCount('${key}')">
+        <span class="copy-type">H${j+1}</span>
+        <span class="copy-text">${h}</span>
+        <span class="${l<=30?'char-ok':'char-over'}">${l}/30</span>
+        <button class="icp-btn" onclick="copyText('${h.replace(/'/g,"\\'")}')"><i class="ti ti-copy"></i></button>
+      </div>`;
+    });
+    v.descriptions.forEach((d,j)=>{
+      const l=d.length;
+      rows+=`<div class="copy-row" id="row-${key}-d-${j}">
+        <input type="checkbox" class="check-box" id="chk-${key}-d-${j}" checked onchange="updateSaveCount('${key}')">
+        <span class="copy-type">D${j+1}</span>
+        <span class="copy-text">${d}</span>
+        <span class="${l<=90?'char-ok':'char-over'}">${l}/90</span>
+        <button class="icp-btn" onclick="copyText('${d.replace(/'/g,"\\'")}')"><i class="ti ti-copy"></i></button>
+      </div>`;
+    });
+    const p1=v.paths[0]||'',p2=v.paths[1]||'';
+    card.innerHTML=`
+      <div class="version-header">
+        <span class="version-label">${vi===0?'A':'B'} — ${v.label||''}</span>
+        <button class="btn primary" style="font-size:12px;padding:5px 10px" id="savebtn-${key}" onclick="openSaveModal('${key}')"><i class="ti ti-database"></i> 存入儀表板</button>
+      </div>
+      <div class="version-body">
+        <div class="select-hint"><span>勾選要使用的素材</span><span id="count-${key}">已選 ${v.headlines.length} 標題、${v.descriptions.length} 描述</span></div>
+        ${rows}
+        <div class="preview-mini">
+          <div class="prev-url">${url}${p1?'/'+p1:''}${p2?'/'+p2:''}</div>
+          <div class="prev-title">${v.headlines.slice(0,3).join(' | ')}</div>
+          <div class="prev-desc">${v.descriptions[0]||''}</div>
+        </div>
+      </div>`;
+    document.getElementById('vgrid').appendChild(card);
+  });
+}
+
+function updateSaveCount(key){
+  const v=window._genResult.parsed[key];
+  const hCount=v.headlines.filter((_,j)=>document.getElementById(`chk-${key}-h-${j}`)?.checked).length;
+  const dCount=v.descriptions.filter((_,j)=>document.getElementById(`chk-${key}-d-${j}`)?.checked).length;
+  document.getElementById(`count-${key}`).textContent=`已選 ${hCount} 標題、${dCount} 描述`;
+}
+
+function openSaveModal(key){
+  const {parsed,clientId}=window._genResult;
+  const v=parsed[key];
+  const today=new Date().toISOString().slice(0,10);
+  document.getElementById('sv-name').value=`${document.getElementById('g-product').value}_${v.label||key}_${today}`;
+  document.getElementById('sv-client').value=clientId;
+  document.getElementById('sv-campaign').value='';
+  // build preview
+  const selH=v.headlines.filter((_,j)=>document.getElementById(`chk-${key}-h-${j}`)?.checked);
+  const selD=v.descriptions.filter((_,j)=>document.getElementById(`chk-${key}-d-${j}`)?.checked);
+  document.getElementById('sv-preview').innerHTML=
+    selH.map((h,i)=>`<div style="padding:3px 0;border-bottom:1px solid var(--border)"><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-right:6px">H${i+1}</span>${h}</div>`).join('')+
+    selD.map((d,i)=>`<div style="padding:3px 0;border-bottom:1px solid var(--border)"><span style="font-family:'DM Mono',monospace;font-size:10px;color:var(--text3);margin-right:6px">D${i+1}</span>${d}</div>`).join('');
+  pendingSave={key,selH,selD};
+  document.getElementById('saveModal').classList.add('open');
+}
+
+function confirmSave(){
+  if(!pendingSave)return;
+  const {selH,selD}=pendingSave;
+  const name=document.getElementById('sv-name').value.trim();
+  if(!name){alert('請填廣告名稱');return}
+  const newAd={
+    id:nextId++,
+    client:document.getElementById('sv-client').value,
+    name,campaign:document.getElementById('sv-campaign').value,
+    status:'新素材',ctr:null,cpa:null,
+    date:new Date().toISOString().slice(0,10),note:'',
+    headlines:selH.map(h=>({text:h,history:[]})),
+    descriptions:selD.map(d=>({text:d,history:[]})),
+  };
+  ads.push(newAd);saveData();
+  closeModal('saveModal');
+  const btn=document.getElementById(`savebtn-${pendingSave.key}`);
+  if(btn){btn.className='btn success';btn.innerHTML='<i class="ti ti-check"></i> 已儲存';btn.disabled=true}
+  showToast('已存入儀表板');pendingSave=null;
+}
+
+// ---- Export ----
+function exportCSV(){
+  const f=getFiltered();
+  const hdr='廣告名稱,客戶,活動,標題數,狀態,日期\n';
+  const rows=f.map(d=>[d.name,clientName(d.client),d.campaign||'',(d.headlines||[]).length,d.status,d.date||''].map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob(['\uFEFF'+hdr+rows],{type:'text/csv;charset=utf-8'}));
+  a.download='ads_studio.csv';a.click();
+}
+
+function copyText(text){navigator.clipboard.writeText(text).catch(()=>{});showToast('已複製')}
+</script>
+</body>
+</html>
